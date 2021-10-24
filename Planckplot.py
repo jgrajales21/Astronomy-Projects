@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
+ 
 h = 6.626e-34 #m**2 * kg / s
 c = 3.0e+8    #m / s
 k = 1.38e-23  # m**2 kg / s**2 * K

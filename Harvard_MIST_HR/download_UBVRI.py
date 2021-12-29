@@ -9,10 +9,10 @@ import os
 
 s = Service("/usr/local/bin/chromedriver")
 
+# download isochrone data from UBVRI file
 def isochrone_file():
     driver = webdriver.Chrome(service=s)
     driver.get("http://waps.cfa.harvard.edu/MIST/model_grids.html")
     driver.maximize_window()
     driver.find_element_by_link_text("UBV(RI)c + 2MASS + Kepler + Hipparcos + Tycho + Gaia (114MB)").click()
 
-isochrone_file()

@@ -4,3 +4,4 @@ This projects automates the ability to produce graphs to study the evolution of 
 Currently developing interpolation routine to construct data for stellar masses not already in data set. 
 Goal is to expand data set to include stellar masses up to 0.05 mass precision spanning 0.1 - 300 solar masses.  
 
+Source: http://waps.cfa.harvard.edu/MIST/index.html

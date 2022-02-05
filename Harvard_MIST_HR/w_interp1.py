@@ -1,4 +1,3 @@
-#"hey"
 import os
 import math as m 
 import numpy as np
@@ -7,38 +6,20 @@ from fastnumbers import isfloat
 from astropy.io import ascii
 
 # has not been implemeted to fit general case as of now astrre dir hardcoded 
+# fix loop on line 65 prefaced with fix this when altering to accept arbitrary mass input; as of now the mass input must end in 0 or 5
+# begin with FIX THIS 2 ; mark every line of coe with 0.05 with FIX THIS
 
-def selec_sort(array):
-    '''
-    selection sort algorithm to sort the EEP files
-    '''
-    MAX = len(array)
-    curr = 0
-    while curr < MAX:
-        j = 0
-        while j < MAX:
-            if array[j] < array[curr]:
-                temp = array[curr]
-                array[curr] = array[j]
-                array[j] = temp
-                j = j + 1
-            else:
-                j = j + 1
-        curr = curr + 1
-
-    return array
 # dir hardecoded: /Users/joshuagrajales/Desktop/astrre/MIST_v1.2_feh_p0.00_afe_p0.0_vvcrit0.0_EEPS
 def test(): 
     # Insert the directory path in here
-    path = input("Input abs path: ")
+    path = input("Input abs path to directory with (untared) evolutionary track files: ")
     
     # Extracting all the contents in the directory corresponding to path
     l_files = os.listdir(path)
     
-    #files are not ordered so perform sorting algorithm: selection sort
     arr_clean = []  
     j = 0
-    #gets rid of of 3 docu files
+    #gets rid of of 3 doc files
     while j < (len(l_files)):
         if l_files[j] == 'README_tables.pdf' or l_files[j] == 'README_overview.pdf' or l_files[j] == "README_overview.pdf":
             j = j + 1
@@ -47,36 +28,21 @@ def test():
             j = j + 1
 
     
-    #loop through list of files and show user
-    print("Please select the mass file for the evolutionary track.")
-    v_selec = selec_sort(arr_clean)
-    sm_file = []
+    # sort the mass files in increasing order and show user
+
+    # Each file is named according to the star mass its data corresponds to. The following makes an array composed of only 
+    # the mass digits associated with each file -- this is needed determine which file the user wants to interact with  
+    v_selec = sorted(arr_clean)
+    file_ints_str = []
     for file in v_selec: 
         print(file + ' Solar Masses: ' + str(float(file[0:5])/100))
-        sm_file.append(float(file[0:5])/100)
-
-    # file intergers in str
-    file_ints_str = []
-    for file in v_selec:
         file_ints_str.append(file[0:5])
 
-    print(file_ints_str)
-    # ensure user selects an existing file
-    user_mass_input = input("Please enter the first four digits of the associated eep file : ")
-    v_inp = False
-    while v_inp == False:
-        if user_mass_input not in file_ints_str:
-            print("Not a valid input")
-            user_mass_input = input("Please enter the first four digits of the associated eep file: ")
-        else: 
-            v_inp = True
+    print()
+    print("INSTRUCTIONS: Input must be of the form ######. For example if you wish to input a 255.05 solar mass star then enter 25505. Likewise if you choose to enter a 1.10 solar mass star enter 00110.")
+    print()
 
-    # tell the user which file the selected 
-    for file in v_selec:
-        if file[0:5] == user_mass_input:
-            print("The file selected is: " + file + ", your input was " + user_mass_input +".")
-
-    print("Input must be of the form ######. For example if you wish to input a 255.05 solar mass star then enter 25505. Likewise if you choose to enter a 1.10 solar mass star enter 00110.")
+    # FIX THIS
     # ask for LOW interp bound; this gives us the minimum mass we want to interpolate to 
     min_interp_dec = input("Please input the MINIMUM eep mass curve you want to highlight: ")
     while isfloat(min_interp_dec) != True or min_interp_dec < '00010' or min_interp_dec > '30000' or int(min_interp_dec[len(min_interp_dec)-1:])% 5 != 0 or len(min_interp_dec) >= 6 or len(min_interp_dec) < 5:
@@ -84,12 +50,10 @@ def test():
         min_interp_dec = input("Please input the MINIMUM eep mass curve you want to highlight (range is 00010 - 30000 solar masses): ")
        
     # if LOW interp is in the array of files then no need to interpolate just use existing data
+    print(71)
     if min_interp_dec in file_ints_str:
-        for file in v_selec:
-            if file[0:5] == min_interp_dec:
-                print("Min-Low file selected is: " + file + ", your input was " + min_interp_dec +".")
-                break
-        dataminlow = ascii.read('/Users/joshuagrajales/Desktop/astrre/MIST_v1.2_feh_p0.00_afe_p0.0_vvcrit0.0_EEPS/' + file)
+        
+        dataminlow = ascii.read(path+'/'+min_interp_dec+"M.track.eep")
 
         logt1 = np.array(dataminlow['col12'])
         logl1 = np.array(dataminlow['col7'])
@@ -98,14 +62,14 @@ def test():
         max_age_minlow = age1[len(age1)-1]
 
         user_age_min_i = float(input("Enter minimum age for lower bound of highlighted region (" + str(min_age_minlow) + " years - " + str(max_age_minlow) + " years): "))
-        while user_age_min_i < min_age_minlow:
-            print("Not a valid age selection, please select an age greater than" + str(min_age_minlow) + " years.")
+        while user_age_min_i < min_age_minlow and isfloat(user_age_min_i) == False:
+            print("Not a valid age selection, please select an age greater than " + str(min_age_minlow) + " years.")
             user_age_min_i = float(input("Enter minimum age for lower bound of highlighted region (" + str(min_age_minlow) + " years - " + str(max_age_minlow) + " years): "))
 
         user_age_max_i = float(input("Enter maximum age for lower bound of highlighted region (" + str(user_age_min_i) + " years - " + str(max_age_minlow) + " years): "))
-        while user_age_max_i > max_age_minlow and user_age_max_i < user_age_min_i:
-            print("Not a valid age selection, please select an age greater than" + str(min_age_minlow) + " years.")
-            user_age_min_i = float(input("Enter maximum age for lower bound of highlighted region (" + str(user_age_min_i) + " years - " + str(max_age_minlow) + " years): "))
+        while user_age_max_i > max_age_minlow or user_age_max_i < user_age_min_i and isfloat(user_age_max_i) == False:
+            print("Not a valid age selection, please select an age greater than " + str(min_age_minlow) + " years.")
+            user_age_max_i = float(input("Enter maximum age for lower bound of highlighted region (" + str(user_age_min_i) + " years - " + str(max_age_minlow) + " years): "))
     
         locminlow = np.where((age1>user_age_min_i)&(age1<user_age_max_i))
         low_temp_arr = logt1[locminlow]
@@ -114,22 +78,22 @@ def test():
 
     # low interp bound not an existing file so interpolate
     elif min_interp_dec not in file_ints_str:
+        print()
+        print('Mass selected has no existing data file. Begin interpolation routine for lower-bound curve.')
+        print()
 
         # find what existing files the min interp bound is between
-        i = len(file_ints_str)-1
-        while i >= 0 and file_ints_str[i] < min_interp_dec:
-            i = i - 1
+        i = 0
+        while i < len(file_ints_str) and file_ints_str[i] < min_interp_dec:
+            i = i + 1
             
         min_max = file_ints_str[i]
-        min_min = file_ints_str[i+1]
+        min_min = file_ints_str[i-1]
         
         # get the full name of the file that corresponds to min_min for low interp bound
-        for file in v_selec:
-            if file[0:5] == min_min:
-                print("Min-Low file selected is: " + file + ", your input was " + min_interp_dec +".")
-                break
+        print("Min-Low file selected is: " + min_min + "M.track.eep, your input was " + min_interp_dec +".")
 
-        dataminlow = ascii.read('/Users/joshuagrajales/Desktop/astrre/MIST_v1.2_feh_p0.00_afe_p0.0_vvcrit0.0_EEPS/' + file)
+        dataminlow = ascii.read(path+'/'+min_min+"M.track.eep")
 
         logt1 = np.array(dataminlow['col12'])
         logl1 = np.array(dataminlow['col7'])
@@ -147,7 +111,7 @@ def test():
         user_age_max_i = float(input("Enter maximum age for lower bound of highlighted region (" + str(user_age_min_i) + " years - " + str(max_age_minlow) + " years): "))
         while user_age_max_i > max_age_minlow and user_age_max_i < user_age_min_i and isfloat(user_age_max_i) == False:
             print("Not a valid age selection, please select an age greater than" + str(min_age_minlow) + " years.")
-            user_age_min_i = float(input("Enter maximum age for lower bound of highlighted region (" + str(user_age_min_i) + " years - " + str(max_age_minlow) + " years): "))
+            user_age_max_i = float(input("Enter maximum age for lower bound of highlighted region (" + str(user_age_min_i) + " years - " + str(max_age_minlow) + " years): "))
         
         # gather data for minlow arrays; this restricts the range of values we are considering to the age range given by the user
         locminlow = np.where((age1>user_age_min_i)&(age1<user_age_max_i))
@@ -156,32 +120,30 @@ def test():
         temp_minlow = logt1[locminlow]
         lum_minlow = logl1[locminlow]
 
-        # This completes accessing the minimum low data points. We now need the minimum high values to then interpolate between both sets
-        # of data. The below accomplishes the second portion of the interpolation routine for the LOW boundary.   
+        print()
+        print("This completes accessing the minimum low data points. We now need the minimum high values to then interpolate between both sets of data. The below accomplishes the second portion of the interpolation routine for the LOW boundary.") 
+        print()
 
         # find the corresponding maximum low file as determined by min_interp_dec
-        for file in v_selec:
-            if file[0:5] == min_max:
-                print("Max-low file selected is: " + file + ", your input was " + min_interp_dec +".")
-                break
+       
+        print("Max-low file selected is: " + min_max + "M.track.eep, your input was " + min_interp_dec +".")
 
         print(file)
-        datamaxlow = ascii.read('/Users/joshuagrajales/Desktop/astrre/MIST_v1.2_feh_p0.00_afe_p0.0_vvcrit0.0_EEPS/' + file)
+        datamaxlow = ascii.read(path+'/'+min_max + "M.track.eep")
 
         logt1 = np.array(datamaxlow['col12'])
         logl1 = np.array(datamaxlow['col7'])
         age1 = np.array(datamaxlow['col1'])
 
-        # gather data for maxlow arrays
+        # gather data for maxlow arrays; recall we use the same age as that given for the min_low array
         locmaxlow = np.where((age1>user_age_min_i)&(age1<user_age_max_i))
 
         # temp and lum for maxlow
         temp_maxlow = logt1[locmaxlow]
         lum_maxlow = logl1[locmaxlow]
-        #check that there is some popping occuring 
 
-        # ensure minlow and maxlow have arrays of the same size for all dimensions
-        
+        # slice arrays so that they have the same size; we need to do this so that there is a one to one interpolation 
+        # betwen points in the array         
         while len(temp_minlow) != len(temp_maxlow):
             if len(temp_maxlow) > len(temp_minlow):
                 temp_maxlow = temp_maxlow[1:]
@@ -194,13 +156,13 @@ def test():
             else:
                 lum_minlow = lum_minlow[1:]
 
-        print(242)
         # consider what hapens in the situation where this yields a decimal for tot steps -- int rounds down.
-        # tot_steps tells us the number of steps of 0.05 we take to reach max_min from min_min 
+        # tot_steps tells us the number of steps of 0.05 we take to reach min_max from min_min 
+        #FIX THIS 2
         print(float(min_max)/100)
         print(float(min_min)/100)
-        print(int(m.ceil((float(min_max)/100 - float(min_min)/100)*20)))
-        tot_steps = int(m.ceil((float(min_max)/100 - float(min_min)/100)*20))
+        print(int(m.ceil((float(min_max)/100 - float(min_min)/100)/0.05)))
+        tot_steps = int(m.ceil((float(min_max)/100 - float(min_min)/100)/0.05))
         float_user_dec_min = float(min_interp_dec)/100
         start = float(min_min)/100
 
@@ -210,15 +172,15 @@ def test():
         # respectively. Thus the below determines how many steps of 0.05 we need to take (from min_min) to get as close as possible
         # to the min_interp_dec. In doing so we know which index to consider when we perform interpolation for each ith index (see
         # next while loop with k < len(temp_maxlow) condition).
+        #FIX THIS 3
         i = 1 
         original = start
-        while original != float_user_dec_min and original <= float_user_dec_min:
+        while original < float_user_dec_min:
             original = start + 0.05*i
             i = i + 1
         #################################### MAKE SURE ABOVE LOOP WORKS
 
 
-        print(252)
         # 'i' keeps track of how many steps we have to take from the base case (min_min) to get to the user input min_interp_dec.
         # The two while loops below complete the interpolation routine for the user input lower bound of the highlighted region, they 
         # do so by using linspace as a mock interpolation routine. The linspace is used to evenly divide the difference
@@ -242,30 +204,17 @@ def test():
 
     # ask for HIGH interp bound; this gives us the maximum mass we want to interpolate to 
     max_interp_dec = input("Please input the MAXIMUM eep mass curve you want to highlight: ")
-    z = False
-    while z != True:
-        if max_interp_dec in file_ints_str:
-            z = True
-        elif isfloat(max_interp_dec) != True or max_interp_dec < min_interp_dec or max_interp_dec > '30000' or int(max_interp_dec[len(max_interp_dec)-1:])%5 != 0 or len(max_interp_dec) >= 6 or len(max_interp_dec) < 5:
-        #while isfloat(max_interp_dec) != True or max_interp_dec < min_interp_dec or max_interp_dec > '30000' or int(max_interp_dec[len(max_interp_dec)-1:])%5 != 0 or len(max_interp_dec) >= 6 or len(max_interp_dec) < 5:
-            print("Not a valid input please select a value that is both within the specified range.")
-            max_interp_dec = input("Please input the MAXIMUM eep mass curve you want to highlight (range is " + str(min_interp_dec) + " - 30000 solar masses): ")
-            z = False
-        else:
-            z = True
-    ################################################### Begin Interp Routine ########################################################
-
-
-    #begin interp routine for HIGH 
+    while isfloat(max_interp_dec) != True or max_interp_dec < min_interp_dec or min_interp_dec > '30000' or int(max_interp_dec[len(max_interp_dec)-1:])% 5 != 0 or len(max_interp_dec) >= 6 or len(max_interp_dec) < 5:
+        print("Not a valid input please select a value that is both within the specified range.")
+        max_interp_dec = input("Please input the MINIMUM eep mass curve you want to highlight (range is 00010 - 30000 solar masses): ")
+     
 
     # if High interp is in the array of files then no need to interpolate just use existing data
     if max_interp_dec in file_ints_str:
-        for file in v_selec:
-            if file[0:5] == max_interp_dec:
-                print("Min-high file selected is: " + file + ", your input was " + max_interp_dec +".")
-                break
+        
+        print("Min-high file selected is: " + max_interp_dec + "M.track.eep, your input was " + max_interp_dec +".")
 
-        dataminhigh = ascii.read('/Users/joshuagrajales/Desktop/astrre/MIST_v1.2_feh_p0.00_afe_p0.0_vvcrit0.0_EEPS/' + file)
+        dataminhigh = ascii.read(path+'/' + max_interp_dec+"M.track.eep")
 
         logt1 = np.array(dataminhigh['col12'])
         logl1 = np.array(dataminhigh['col7'])
@@ -282,20 +231,17 @@ def test():
     elif max_interp_dec not in file_ints_str:
 
         # FOR HIGH INTERP: find the solar mass files the min interp is inbetween
-        i = len(file_ints_str)-1
-        while i >= 0 and file_ints_str[i] < max_interp_dec:
-            i = i - 1
+        i = 0
+        while i < len(file_ints_str) and file_ints_str[i] < max_interp_dec:
+            i = i + 1
             
         max_max = file_ints_str[i]
-        max_min = file_ints_str[i+1]
+        max_min = file_ints_str[i-1]
     
         # isolate min file for HIGH INTERP
-        for file in v_selec:
-            if file[0:5] == max_min:
-                print("Min-high file selected is: " + file + ", your input was " + max_interp_dec +".")
-                break
+        print("Min-high file selected is: " + max_min + "M.track.eep, your input was " + max_interp_dec +".")
 
-        dataminhigh = ascii.read('/Users/joshuagrajales/Desktop/astrre/MIST_v1.2_feh_p0.00_afe_p0.0_vvcrit0.0_EEPS/' + file)
+        dataminhigh = ascii.read(path+'/' + max_min+"M.track.eep")
 
         logt1 = np.array(dataminhigh['col12'])
         logl1 = np.array(dataminhigh['col7'])
@@ -307,19 +253,13 @@ def test():
         # temp and lum array for minhigh
         temp_minhigh = logt1[locminhigh]
         lum_minhigh = logl1[locminhigh]
-        print(301)
         # This completes accessing the minimum high data points. We now need the maximum high values to then interpolate 
         # both sets of data. The below accomplishes the second portion of the interpolation routine for the HIGH boundary.
 
         # find the corresponding maximum high file as determined by max_interp_dec
-        for file in v_selec:
-            if file[0:5] == max_max:
-                print("Max-high file selected is: " + file + ", yourr input was " + max_interp_dec +".")
-                break
+        print("Max-high file selected is: " + max_max + "M.track.eep, yourr input was " + max_interp_dec +".")
 
-        print(306)
-        print(file)
-        datamaxhigh = ascii.read('/Users/joshuagrajales/Desktop/astrre/MIST_v1.2_feh_p0.00_afe_p0.0_vvcrit0.0_EEPS/' + file)
+        datamaxhigh = ascii.read(path+'/' + max_max+"M.track.eep")
 
         logt1 = np.array(datamaxhigh['col12'])
         logl1 = np.array(datamaxhigh['col7'])
@@ -331,7 +271,6 @@ def test():
         # temp and lum for maxlow
         temp_maxhigh = logt1[locmaxhigh]
         lum_maxhigh = logl1[locmaxhigh]
-        print(319)
 
         # ensure minhigh and maxhigh have arrays of the same size for all dimensions
         while len(temp_minhigh) != len(temp_maxhigh):
@@ -339,14 +278,13 @@ def test():
                 temp_maxhigh = temp_maxhigh[1:]
             else: 
                 temp_minhigh = temp_minhigh[1:]
-        print(327)
+
         while len(lum_minhigh) != len(lum_maxhigh):
             if len(lum_maxhigh) > len(lum_minhigh):
                 lum_maxhigh = lum_maxhigh[1:]
             else:
                 lum_minhigh = lum_minhigh[1:]
 
-        print(335)
         tot_steps = int((float(max_max)/100 - float(max_min)/100)*20)
         float_user_dec_max = float(max_interp_dec)/100
         start = float(max_min)/100
@@ -357,7 +295,7 @@ def test():
         while original != float_user_dec_max and original <= float(max_max)/100:
             original = start + 0.05*i
             i = i + 1
-        print(351)
+
         i = i - 1
         k = 0
         high_temp_arr = []
@@ -365,14 +303,14 @@ def test():
             x = np.linspace(temp_minhigh[k], temp_maxhigh[k], tot_steps+2)
             high_temp_arr.append(x[i])
             k  = k + 1
-        print(359)
+
         y = 0
         high_lum_arr = []
         while y < len(temp_maxhigh):
             x = np.linspace(lum_minhigh[y], lum_maxhigh[y], tot_steps+2)
             high_lum_arr.append(x[i])
             y = y + 1
-        print(366)
+
     # ensure all arrays are of the same size
     while len(high_temp_arr) != len(low_temp_arr):
         if len(high_temp_arr) > len(low_temp_arr):
@@ -427,5 +365,8 @@ def test():
     return 
     
 test()
+
+
+
 
 
